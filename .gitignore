@@ -1,0 +1,106 @@
+# Project files
+.DS_Store
+.idea/
+.vscode/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.metadata
+.iml
+build/
+*.iml
+*.freezed.dart
+*.g.dart
+
+# Local configuration
+lib/generated_plugin_registrant.dart
+
+# Dependency directories
+.dart_tool/
+.symlinks/
+.pub-cache/
+
+# AOT builds
+app.*.snapshot
+/build/
+
+# Android
+android/local.properties
+android/.gradle
+android/build/
+android/app/build/
+android/app/src/debug/
+android/app/src/release/
+android/app/src/profile/
+
+# iOS
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/*.xcworkspace/
+ios/Runner/*.xcodeproj/xcuserdata/
+ios/Runner/*.xcodeproj/project.xcworkspace/
+ios/Runner/*.xcodeproj/xcshareddata/
+ios/Runner/*.xcworkspace/contents.xcworkspacedata
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Runner/*.xcworkspace/
+macos/Runner/*.xcodeproj/xcuserdata/
+macos/Runner/*.xcodeproj/project.xcworkspace/
+macos/Runner/*.xcodeproj/xcshareddata/
+macos/Runner/*.xcworkspace/contents.xcworkspacedata
+
+# Linux
+linux/flutter/generated_plugins.cmake
+
+# Windows
+windows/flutter/generated_plugins.cmake
+
+# Web
+web/flutter_service_worker.js
+web/index.html
+
+# VS Code
+.vscode/
+.history/
+
+# Other
+*.log
+*.lock
+*.sqlite
+*.sqlite-journal
+*.db
+*.bak
+*.tmp
+*.swp
+*.swo
+*.orig
+*.rej
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.bin
+*.dat
+*.form
+*.ser
+*.pyc
+*.pyo
+*.pyd
+*.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
