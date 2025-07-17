@@ -5,7 +5,7 @@ import 'package:flutter_face_auth_app/bloc/auth/auth_bloc.dart';
 import 'package:flutter_face_auth_app/bloc/face_upload/face_upload_bloc.dart';
 import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:flutter_face_auth_app/widgets/camera_preview_widget.dart';
-import 'package:go_router/go_router.dart';
+
 import 'package:toastification/toastification.dart';
 
 class ForceFaceUploadPage extends StatefulWidget {

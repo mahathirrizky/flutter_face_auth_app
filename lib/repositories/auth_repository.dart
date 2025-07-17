@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
-
+import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 class AuthRepository {
   final String _baseUrl = 'https://api.4commander.my.id/api'; // Sesuaikan dengan URL base API Anda
 
@@ -12,7 +12,7 @@ class AuthRepository {
     final client = ApiClient(http.Client());
     try {
       final response = await client.post(
-        Uri.parse('$_baseUrl/login/employee'),
+        Uri.parse('${ApiClient.baseUrl}/login/employee'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -33,7 +33,7 @@ class AuthRepository {
       } else {
         final errorBody = json.decode(response.body);
         final errorMessage = errorBody['message'] ?? 'Terjadi kesalahan saat login.';
-        throw Exception(errorMessage);
+        throw CustomException(errorMessage);
       }
     } finally {
       client.close();

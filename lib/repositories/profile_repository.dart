@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'api_client.dart';
-
+import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 class ProfileRepository {
   final String _baseUrl = 'https://api.4commander.my.id/api';
 
@@ -41,7 +41,7 @@ class ProfileRepository {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$_baseUrl/employee/register-face'),
+        Uri.parse('${ApiClient.baseUrl}/employee/register-face'),
       );
       request.files.add(http.MultipartFile.fromBytes(
         'face_image',
@@ -59,7 +59,7 @@ class ProfileRepository {
       } else {
         final errorBody = json.decode(response.body);
         final errorMessage = errorBody['message'] ?? 'Failed to upload face image.';
-        throw Exception(errorMessage);
+        throw CustomException(errorMessage);
       }
     } finally {
       client.close();

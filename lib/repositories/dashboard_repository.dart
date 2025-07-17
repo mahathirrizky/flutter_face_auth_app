@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
-
+import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 class DashboardRepository {
   final String _baseUrl = 'https://api.4commander.my.id/api'; // Sesuaikan dengan URL base API Anda
 
@@ -11,7 +11,7 @@ class DashboardRepository {
     final client = ApiClient(http.Client());
     try {
       final response = await client.get(
-        Uri.parse('$_baseUrl/employee/dashboard-summary'),
+        Uri.parse('${ApiClient.baseUrl}/employee/dashboard-summary'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -27,7 +27,7 @@ class DashboardRepository {
       } else {
         final errorBody = json.decode(response.body);
         final errorMessage = errorBody['message'] ?? 'Gagal memuat ringkasan dashboard.';
-        throw Exception(errorMessage);
+        throw CustomException(errorMessage);
       }
     } finally {
       client.close();

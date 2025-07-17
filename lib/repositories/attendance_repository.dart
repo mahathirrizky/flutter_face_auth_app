@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:flutter_face_auth_app/repositories/api_client.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 
 class AttendanceRepository {
   final ApiClient _apiClient;
@@ -96,7 +97,7 @@ class AttendanceRepository {
     required String imageData,
   }) async {
     final response = await _apiClient.post(
-      Uri.parse('$_baseUrl/overtime/check-out'),
+      Uri.parse('${ApiClient.baseUrl}/overtime/check-out'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'employee_id': employeeId,
@@ -109,7 +110,7 @@ class AttendanceRepository {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return responseBody;
     } else {
-      throw Exception(responseBody['message'] ?? 'Failed to handle overtime check-out');
+      throw CustomException(responseBody['message'] ?? 'Failed to handle overtime check-out');
     }
   }
 }

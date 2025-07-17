@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_face_auth_app/app_router.dart'; // Import app_router for rootNavigatorKey
 
 class ApiClient extends http.BaseClient {
+  static const String baseUrl = 'https://api.4commander.my.id/api';
   final http.Client _inner;
   // Removed BuildContext context; as it's no longer needed for navigation
 

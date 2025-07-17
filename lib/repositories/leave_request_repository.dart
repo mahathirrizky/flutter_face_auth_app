@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
-
+import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 // Model untuk LeaveRequest, sesuai dengan struktur di backend Go
 class LeaveRequest {
   final int id;
@@ -83,7 +83,7 @@ class LeaveRequestRepository {
   Future<List<LeaveRequest>> getMyLeaveRequests({String? startDate, String? endDate}) async {
     final client = ApiClient(http.Client());
     try {
-      String url = '$_baseUrl/my-leave-requests';
+      String url = '${ApiClient.baseUrl}/my-leave-requests';
       if (startDate != null && endDate != null) {
         url += '?start_date=$startDate&end_date=$endDate';
       } else if (startDate != null) {
@@ -106,7 +106,7 @@ class LeaveRequestRepository {
       } else {
         final errorBody = json.decode(response.body);
         final errorMessage = errorBody['message'] ?? 'Failed to fetch leave requests.';
-        throw Exception(errorMessage);
+        throw CustomException(errorMessage);
       }
     } finally {
       client.close();

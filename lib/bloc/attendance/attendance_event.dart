@@ -30,7 +30,7 @@ class UpdateDeviceLocation extends AttendanceEvent {
 
   UpdateDeviceLocation({required this.position});
 
-  @override
+ 
   List<Object> get props => [position];
 }
 
