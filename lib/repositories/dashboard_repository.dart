@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'api_client.dart';
 import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 class DashboardRepository {
-  final String _baseUrl = 'https://api.4commander.my.id/api'; // Sesuaikan dengan URL base API Anda
 
   DashboardRepository();
 

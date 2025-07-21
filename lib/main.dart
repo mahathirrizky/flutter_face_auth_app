@@ -77,24 +77,15 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: ToastificationWrapper(
-          child: BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is Authenticated) {
-                appRouter.go('/employee');
-              } else if (state is Unauthenticated) {
-                appRouter.go('/login');
-              } else if (state is AuthNeedsFaceRegistration) {
-                appRouter.go('/force-face-upload');
-              } else if (state is AuthLogoutSuccess) {
-                appRouter.go('/login');
-              }
-            },
-            child: MaterialApp.router(
-              routerConfig: appRouter,
-              title: 'Flutter Face Auth',
-              debugShowCheckedModeBanner: false,
-              theme: appTheme(),
-            ),
+          child: Builder(
+            builder: (context) {
+              return MaterialApp.router(
+                routerConfig: appRouter(context),
+                title: 'Flutter Face Auth',
+                debugShowCheckedModeBanner: false,
+                theme: appTheme(),
+              );
+            }
           ),
         ),
       ),

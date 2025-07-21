@@ -5,7 +5,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
-import 'package:camera/camera.dart';
+
 import 'package:flutter_face_auth_app/repositories/attendance_repository.dart';
 import 'package:flutter_face_auth_app/repositories/profile_repository.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -287,7 +287,8 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
           throw Exception('Invalid attendance action type');
       }
 
-      // 5. On success, refetch only the necessary data to update the UI
+      // 5. On success, add a small delay and refetch data to update the UI
+      await Future.delayed(const Duration(seconds: 2)); // Delay to mitigate backend processing lag
       final updatedTodayAttendance = await _attendanceRepository.getTodayAttendance(employeeId);
       final updatedAttendanceHistory = await _attendanceRepository.getAttendanceHistory(employeeId);
 

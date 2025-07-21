@@ -96,7 +96,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     } catch (e) {
       print('DEBUG: AuthBloc - Login failed: $e');
-      emit(AuthFailure(message: e.toString()));
+      // Jika error adalah karena sesi kedaluwarsa, logout dan arahkan ke login
+      if (e.toString().contains('Session expired')) {
+        await _authRepository.logout();
+        emit(Unauthenticated());
+      } else {
+        emit(AuthFailure(message: e.toString()));
+      }
     }
   }
 

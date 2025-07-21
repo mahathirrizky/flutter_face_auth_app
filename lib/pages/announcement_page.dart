@@ -18,8 +18,11 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch announcements from API first
-    context.read<AnnouncementBloc>().add(FetchAnnouncements());
+    // Only fetch announcements if they haven't been loaded yet.
+    // This prevents overwriting the state updated by WebSocket messages.
+    if (context.read<AnnouncementBloc>().state is! AnnouncementLoaded) {
+      context.read<AnnouncementBloc>().add(FetchAnnouncements());
+    }
   }
 
   @override

@@ -39,8 +39,8 @@ class Announcement {
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
       id: json['id'],
-      title: json['title'],
-      content: json['content'],
+      title: json['title'] ?? 'Pengumuman Baru', // Keep default title as backend doesn't send it
+      content: json['message'] ?? 'No Content', // Use 'message' from backend for content
       createdAt: DateTime.parse(json['created_at']),
       expireDate: json['expire_date'] != null ? DateTime.parse(json['expire_date']) : null,
       isRead: json['is_read'] ?? false,
