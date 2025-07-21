@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
+import 'package:flutter_face_auth_app/widgets/announcement_card.dart';
 import 'package:toastification/toastification.dart';
-import 'package:intl/intl.dart'; // Import intl package
+
 
 class AnnouncementPage extends StatefulWidget {
   const AnnouncementPage({super.key});
@@ -12,14 +13,13 @@ class AnnouncementPage extends StatefulWidget {
   State<AnnouncementPage> createState() => _AnnouncementPageState();
 }
 
-class _AnnouncementPageState extends State<AnnouncementPage> {
-  final Map<int, bool> _expandedMessages = {}; // To track expanded messages
 
+
+class _AnnouncementPageState extends State<AnnouncementPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    // Only fetch announcements if they haven't been loaded yet.
-    // This prevents overwriting the state updated by WebSocket messages.
+    WidgetsBinding.instance.addObserver(this);
     if (context.read<AnnouncementBloc>().state is! AnnouncementLoaded) {
       context.read<AnnouncementBloc>().add(FetchAnnouncements());
     }
@@ -27,7 +27,15 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<AnnouncementBloc>().add(FetchAnnouncements());
+    }
   }
 
   void _showToast(BuildContext context, String message, {ToastificationType type = ToastificationType.info}) {
@@ -38,17 +46,6 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
       autoCloseDuration: const Duration(seconds: 3),
       alignment: Alignment.topRight,
     );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'N/A';
-    return DateFormat('dd MMMM yyyy, HH:mm').format(date.toLocal());
-  }
-
-  void _toggleExpanded(int messageId) {
-    setState(() {
-      _expandedMessages[messageId] = !(_expandedMessages[messageId] ?? false);
-    });
   }
 
   @override
@@ -65,7 +62,7 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) {
           if (state is AnnouncementError) {
-            if (!mounted) return; // Check mounted before using context
+            if (!mounted) return;
             _showToast(context, state.message, type: ToastificationType.error);
           }
         },
@@ -101,91 +98,7 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
                         itemCount: announcements.length,
                         itemBuilder: (context, index) {
                           final announcement = announcements[index];
-                          final isExpanded = _expandedMessages[announcement.id] ?? false;
-                          
-                          // Styling for unread messages
-                          final cardColor = announcement.isRead ? AppColors.bgMuted : AppColors.bgMuted.withAlpha(230);
-                          final textColor = AppColors.textBase;
-                          final fontWeight = announcement.isRead ? FontWeight.normal : FontWeight.bold;
-                          final borderSide = announcement.isRead ? BorderSide.none : BorderSide(color: AppColors.secondary, width: 2.0);
-
-                          return GestureDetector(
-                            onTap: () {
-                              if (!announcement.isRead) {
-                                context.read<AnnouncementBloc>().add(MarkAnnouncementAsRead(messageId: announcement.id));
-                              }
-                            },
-                            child: Card(
-                              color: cardColor,
-                              margin: const EdgeInsets.only(bottom: 16.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                                side: borderSide,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        if (!announcement.isRead)
-                                          Container(
-                                            width: 10,
-                                            height: 10,
-                                            margin: const EdgeInsets.only(right: 10),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.secondary,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                        Expanded(
-                                          child: Text(
-                                            'Pengumuman Baru',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: fontWeight,
-                                              color: textColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Diterbitkan pada: ${_formatDate(announcement.createdAt)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Berlaku hingga: ${announcement.expireDate != null ? _formatDate(announcement.expireDate) : 'Tidak ada tanggal kedaluwarsa'}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      announcement.content,
-                                      style: TextStyle(color: textColor, fontSize: 14),
-                                      maxLines: isExpanded ? null : 3,
-                                      overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-                                    ),
-                                    if (announcement.content.length > 100)
-                                      TextButton(
-                                        onPressed: () => _toggleExpanded(announcement.id),
-                                        child: Text(
-                                          isExpanded ? 'Tampilkan Lebih Sedikit' : 'Baca Selengkapnya',
-                                          style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
+                          return AnnouncementCard(announcement: announcement); // Use the new widget
                         },
                       ),
                   ],

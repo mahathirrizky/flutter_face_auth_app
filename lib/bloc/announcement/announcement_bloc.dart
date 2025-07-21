@@ -37,8 +37,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     if (state is AnnouncementLoaded) {
       final currentState = state as AnnouncementLoaded;
       final updatedAnnouncements = List<Announcement>.from(currentState.announcements);
-      // Add new announcement at the beginning, ensuring it's marked as unread initially
-      updatedAnnouncements.insert(0, event.announcement.copyWith(isRead: false));
+      // Check if the announcement already exists to prevent duplicates
+      if (!updatedAnnouncements.any((ann) => ann.id == event.announcement.id)) {
+        updatedAnnouncements.insert(0, event.announcement.copyWith(isRead: false));
+      }
       emit(AnnouncementLoaded(announcements: updatedAnnouncements));
     } else {
       emit(AnnouncementLoaded(announcements: [event.announcement.copyWith(isRead: false)]));

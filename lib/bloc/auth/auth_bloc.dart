@@ -140,6 +140,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _webSocketService = WebSocketService(
       fullWebSocketUrl: fullWebSocketUrl,
       onMessageReceived: (message) {
+        // This is where the message is processed and passed to the callback
         _onWebSocketMessage(message);
       },
       onError: (error) {
@@ -159,3 +160,4 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     return super.close();
   }
 }
+

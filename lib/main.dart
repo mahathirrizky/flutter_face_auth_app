@@ -41,6 +41,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
+          BlocProvider<AnnouncementBloc>(
+            create: (context) => AnnouncementBloc(announcementRepository: announcementRepository),
+          ),
           BlocProvider<AuthBloc>(
             create: (context) => AuthBloc(
               authRepository: authRepository,
@@ -53,9 +56,6 @@ class MyApp extends StatelessWidget {
                 }
               },
             )..add(AuthCheckRequested()),
-          ),
-          BlocProvider<AnnouncementBloc>(
-            create: (context) => AnnouncementBloc(announcementRepository: announcementRepository),
           ),
           BlocProvider<EmployeeProfileBloc>(
             create: (context) => EmployeeProfileBloc(profileRepository: profileRepository),

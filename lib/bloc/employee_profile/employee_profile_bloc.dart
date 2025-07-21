@@ -42,19 +42,26 @@ class EmployeeProfileBloc extends Bloc<EmployeeProfileEvent, EmployeeProfileStat
     emit(currentState.copyWith(successMessage: null, errorMessage: null)); // Clear messages
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simulate success
-      emit(currentState.copyWith(
+      await _profileRepository.updateEmployeeProfile(
         name: event.name,
         email: event.email,
         position: event.position,
+      );
+
+      // After successful update, re-fetch the profile to ensure data consistency
+      final updatedProfile = await _profileRepository.getEmployeeProfile();
+
+      emit(currentState.copyWith(
+        name: updatedProfile['name'] ?? event.name,
+        email: updatedProfile['email'] ?? event.email,
+        position: updatedProfile['position'] ?? event.position,
         successMessage: 'Profil berhasil diperbarui!',
+        errorMessage: null,
       ));
     } catch (e) {
       emit(currentState.copyWith(
         errorMessage: 'Gagal memperbarui profil: $e',
+        successMessage: null,
       ));
     }
   }
@@ -80,10 +87,11 @@ class EmployeeProfileBloc extends Bloc<EmployeeProfileEvent, EmployeeProfileStat
     }
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      await _profileRepository.changeEmployeePassword(
+        newPassword: event.newPassword,
+        confirmNewPassword: event.confirmNewPassword,
+      );
 
-      // Simulate success
       emit(currentState.copyWith(
         successMessage: 'Kata sandi berhasil diubah!',
         errorMessage: null, // Clear any previous error
@@ -91,6 +99,7 @@ class EmployeeProfileBloc extends Bloc<EmployeeProfileEvent, EmployeeProfileStat
     } catch (e) {
       emit(currentState.copyWith(
         errorMessage: 'Gagal mengubah kata sandi: $e',
+        successMessage: null,
       ));
     }
   }

@@ -65,4 +65,60 @@ class ProfileRepository {
       client.close();
     }
   }
+
+  Future<void> updateEmployeeProfile({
+    required String name,
+    required String email,
+    required String position,
+  }) async {
+    final client = ApiClient(http.Client());
+    try {
+      final response = await client.put(
+        Uri.parse('$_baseUrl/employee/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'name': name,
+          'email': email,
+          'position': position,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorBody = json.decode(response.body);
+        final errorMessage = errorBody['message'] ?? 'Failed to update profile.';
+        throw CustomException(errorMessage);
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<void> changeEmployeePassword({
+    required String newPassword,
+    required String confirmNewPassword,
+  }) async {
+    final client = ApiClient(http.Client());
+    try {
+      final response = await client.put(
+        Uri.parse('$_baseUrl/employee/change-password'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'new_password': newPassword,
+          'confirm_new_password': confirmNewPassword,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorBody = json.decode(response.body);
+        final errorMessage = errorBody['message'] ?? 'Failed to change password.';
+        throw CustomException(errorMessage);
+      }
+    } finally {
+      client.close();
+    }
+  }
 }
