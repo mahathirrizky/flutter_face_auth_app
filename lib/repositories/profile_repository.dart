@@ -96,6 +96,7 @@ class ProfileRepository {
   }
 
   Future<void> changeEmployeePassword({
+    required String oldPassword,
     required String newPassword,
     required String confirmNewPassword,
   }) async {
@@ -107,6 +108,7 @@ class ProfileRepository {
           'Content-Type': 'application/json',
         },
         body: json.encode({
+          'old_password': oldPassword,
           'new_password': newPassword,
           'confirm_new_password': confirmNewPassword,
         }),

@@ -1,4 +1,4 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:toastification/toastification.dart';
@@ -28,8 +28,13 @@ class EmployeeProfilePage extends StatelessWidget {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController positionController = TextEditingController();
+    final TextEditingController oldPasswordController = TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
     final TextEditingController confirmNewPasswordController = TextEditingController();
+
+    final ValueNotifier<bool> obscureOldPassword = ValueNotifier<bool>(true);
+    final ValueNotifier<bool> obscureNewPassword = ValueNotifier<bool>(true);
+    final ValueNotifier<bool> obscureConfirmNewPassword = ValueNotifier<bool>(true);
 
     return Scaffold(
       appBar: AppBar(
@@ -248,43 +253,103 @@ class EmployeeProfilePage extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              TextFormField(
-                                controller: newPasswordController,
-                                obscureText: true,
-                                decoration: InputDecoration(
-                                  labelText: 'Kata Sandi Baru',
-                                  labelStyle: TextStyle(color: AppColors.textMuted),
-                                  hintStyle: TextStyle(color: AppColors.textMuted),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: AppColors.textMuted),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: AppColors.secondary),
-                                  ),
-                                ),
-                                style: TextStyle(color: AppColors.textBase),
+                              ValueListenableBuilder<bool>(
+                                valueListenable: obscureOldPassword,
+                                builder: (context, isObscure, child) {
+                                  return TextFormField(
+                                    controller: oldPasswordController,
+                                    obscureText: isObscure,
+                                    decoration: InputDecoration(
+                                      labelText: 'Kata Sandi Lama',
+                                      labelStyle: TextStyle(color: AppColors.textMuted),
+                                      hintStyle: TextStyle(color: AppColors.textMuted),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: AppColors.textMuted),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: AppColors.secondary),
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          isObscure ? Icons.visibility_off : Icons.visibility,
+                                          color: AppColors.textMuted,
+                                        ),
+                                        onPressed: () {
+                                          obscureOldPassword.value = !isObscure;
+                                        },
+                                      ),
+                                    ),
+                                    style: TextStyle(color: AppColors.textBase),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 16),
-                              TextFormField(
-                                controller: confirmNewPasswordController,
-                                obscureText: true,
-                                decoration: InputDecoration(
-                                  labelText: 'Konfirmasi Kata Sandi Baru',
-                                  labelStyle: TextStyle(color: AppColors.textMuted),
-                                  hintStyle: TextStyle(color: AppColors.textMuted),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: AppColors.textMuted),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: AppColors.secondary),
-                                  ),
-                                ),
-                                style: TextStyle(color: AppColors.textBase),
+                              ValueListenableBuilder<bool>(
+                                valueListenable: obscureNewPassword,
+                                builder: (context, isObscure, child) {
+                                  return TextFormField(
+                                    controller: newPasswordController,
+                                    obscureText: isObscure,
+                                    decoration: InputDecoration(
+                                      labelText: 'Kata Sandi Baru',
+                                      labelStyle: TextStyle(color: AppColors.textMuted),
+                                      hintStyle: TextStyle(color: AppColors.textMuted),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: AppColors.textMuted),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: AppColors.secondary),
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          isObscure ? Icons.visibility_off : Icons.visibility,
+                                          color: AppColors.textMuted,
+                                        ),
+                                        onPressed: () {
+                                          obscureNewPassword.value = !isObscure;
+                                        },
+                                      ),
+                                    ),
+                                    style: TextStyle(color: AppColors.textBase),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              ValueListenableBuilder<bool>(
+                                valueListenable: obscureConfirmNewPassword,
+                                builder: (context, isObscure, child) {
+                                  return TextFormField(
+                                    controller: confirmNewPasswordController,
+                                    obscureText: isObscure,
+                                    decoration: InputDecoration(
+                                      labelText: 'Konfirmasi Kata Sandi Baru',
+                                      labelStyle: TextStyle(color: AppColors.textMuted),
+                                      hintStyle: TextStyle(color: AppColors.textMuted),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: AppColors.textMuted),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: AppColors.secondary),
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          isObscure ? Icons.visibility_off : Icons.visibility,
+                                          color: AppColors.textMuted,
+                                        ),
+                                        onPressed: () {
+                                          obscureConfirmNewPassword.value = !isObscure;
+                                        },
+                                      ),
+                                    ),
+                                    style: TextStyle(color: AppColors.textBase),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () {
                                   context.read<EmployeeProfileBloc>().add(ChangeEmployeePassword(
+                                    oldPassword: oldPasswordController.text,
                                     newPassword: newPasswordController.text,
                                     confirmNewPassword: confirmNewPasswordController.text,
                                   ));

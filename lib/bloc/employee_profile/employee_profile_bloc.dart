@@ -73,7 +73,7 @@ class EmployeeProfileBloc extends Bloc<EmployeeProfileEvent, EmployeeProfileStat
 
     emit(currentState.copyWith(successMessage: null, errorMessage: null)); // Clear messages
 
-    if (event.newPassword.isEmpty || event.confirmNewPassword.isEmpty) {
+    if (event.oldPassword.isEmpty || event.newPassword.isEmpty || event.confirmNewPassword.isEmpty) {
       emit(currentState.copyWith(errorMessage: 'Harap isi semua kolom kata sandi.'));
       return;
     }
@@ -81,13 +81,17 @@ class EmployeeProfileBloc extends Bloc<EmployeeProfileEvent, EmployeeProfileStat
       emit(currentState.copyWith(errorMessage: 'Kata sandi baru dan konfirmasi tidak cocok.'));
       return;
     }
-    if (event.newPassword.length < 6) {
-      emit(currentState.copyWith(errorMessage: 'Kata sandi minimal 6 karakter.'));
+    if (event.newPassword.length < 8 ||
+        !event.newPassword.contains(RegExp(r'[A-Z]')) ||
+        !event.newPassword.contains(RegExp(r'[a-z]')) ||
+        !event.newPassword.contains(RegExp(r'[0-9]'))) {
+      emit(currentState.copyWith(errorMessage: 'Kata sandi minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.'));
       return;
     }
 
     try {
       await _profileRepository.changeEmployeePassword(
+        oldPassword: event.oldPassword,
         newPassword: event.newPassword,
         confirmNewPassword: event.confirmNewPassword,
       );

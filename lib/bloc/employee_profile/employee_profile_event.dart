@@ -18,10 +18,12 @@ class UpdateEmployeeProfile extends EmployeeProfileEvent {
 }
 
 class ChangeEmployeePassword extends EmployeeProfileEvent {
+  final String oldPassword;
   final String newPassword;
   final String confirmNewPassword;
 
   ChangeEmployeePassword({
+    required this.oldPassword,
     required this.newPassword,
     required this.confirmNewPassword,
   });
