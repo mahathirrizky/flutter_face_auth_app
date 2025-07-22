@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
-import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_face_auth_app/repositories/profile_repository.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';

@@ -5,6 +5,7 @@ class AppColors {
   static const Color secondary = Color(0xFF10B981);
   static const Color accent = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
+  static const Color success = Color(0xFF22C55E); // Added success color
   static const Color textBase = Color(0xFFF9FAFB);
   static const Color textMuted = Color(0xFF9CA3AF);
   static const Color bgBase = Color(0xFF111827);

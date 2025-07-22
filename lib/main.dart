@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
               onWebSocketMessage: (message) {
                 if (message['type'] == 'broadcast_message') {
                   final announcementPayload = message['payload'];
-                  final announcement = Announcement.fromJson(announcementPayload).copyWith(isRead: false);
+                  final announcement = Announcement.fromJson(announcementPayload);
                   context.read<AnnouncementBloc>().add(ReceiveNewAnnouncement(announcement: announcement));
                 }
               },

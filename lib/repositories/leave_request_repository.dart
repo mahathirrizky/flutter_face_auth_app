@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
 import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
+import 'api_client.dart';
 // Model untuk LeaveRequest, sesuai dengan struktur di backend Go
 class LeaveRequest {
   final int id;
@@ -42,7 +43,6 @@ class LeaveRequest {
 }
 
 class LeaveRequestRepository {
-  final String _baseUrl = 'https://api.4commander.my.id/api';
 
   LeaveRequestRepository();
 
@@ -55,7 +55,7 @@ class LeaveRequestRepository {
     final client = ApiClient(http.Client());
     try {
       final response = await client.post(
-        Uri.parse('$_baseUrl/leave-requests'),
+        Uri.parse('${ApiClient.baseUrl}/leave-requests'),
         headers: {
           'Content-Type': 'application/json',
         },

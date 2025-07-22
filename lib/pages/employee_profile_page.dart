@@ -4,12 +4,68 @@ import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_pw_validator/flutter_pw_validator.dart';
 
-class EmployeeProfilePage extends StatelessWidget {
+class EmployeeProfilePage extends StatefulWidget {
   const EmployeeProfilePage({super.key});
 
+  @override
+  State<EmployeeProfilePage> createState() => _EmployeeProfilePageState();
+}
+
+class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController positionController = TextEditingController();
+  final TextEditingController oldPasswordController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmNewPasswordController = TextEditingController();
+
+  final ValueNotifier<bool> obscureOldPassword = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> obscureNewPassword = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> obscureConfirmNewPassword = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> isPasswordValid = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _showPasswordValidator = ValueNotifier<bool>(false);
+
+  late FocusNode _newPasswordFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _newPasswordFocusNode = FocusNode();
+    _newPasswordFocusNode.addListener(() {
+      if (_newPasswordFocusNode.hasFocus) {
+        _showPasswordValidator.value = true; // Show validator when focused
+        // Trigger validation when the field gains focus
+        newPasswordController.text = newPasswordController.text; // This will trigger onChanged
+      }
+    });
+    // Dispatch initial data fetch when the page is built
+    context.read<EmployeeProfileBloc>().add(LoadEmployeeProfile());
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    positionController.dispose();
+    oldPasswordController.dispose();
+    newPasswordController.dispose();
+    confirmNewPasswordController.dispose();
+    obscureOldPassword.dispose();
+    obscureNewPassword.dispose();
+    obscureConfirmNewPassword.dispose();
+    isPasswordValid.dispose();
+    _showPasswordValidator.dispose();
+    _newPasswordFocusNode.dispose();
+    super.dispose();
+  }
+
   // Helper for toast messages
-  void _showToast(BuildContext context, String message, {ToastificationType type = ToastificationType.info}) {
+  void _showToast(BuildContext context, String message,
+      {ToastificationType type = ToastificationType.info}) {
     toastification.show(
       context: context,
       title: Text(message),
@@ -20,22 +76,18 @@ class EmployeeProfilePage extends StatelessWidget {
     );
   }
 
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Konfirmasi kata sandi tidak boleh kosong.';
+    }
+    if (value != newPasswordController.text) {
+      return 'Kata sandi dan konfirmasi kata sandi tidak cocok.';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Dispatch initial data fetch when the page is built
-    context.read<EmployeeProfileBloc>().add(LoadEmployeeProfile());
-
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController positionController = TextEditingController();
-    final TextEditingController oldPasswordController = TextEditingController();
-    final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmNewPasswordController = TextEditingController();
-
-    final ValueNotifier<bool> obscureOldPassword = ValueNotifier<bool>(true);
-    final ValueNotifier<bool> obscureNewPassword = ValueNotifier<bool>(true);
-    final ValueNotifier<bool> obscureConfirmNewPassword = ValueNotifier<bool>(true);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Karyawan'),
@@ -235,15 +287,17 @@ class EmployeeProfilePage extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       // Ubah Kata Sandi Card
-                      Card(
-                        color: AppColors.bgMuted,
-                        margin: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                      Form(
+                        key: _formKey,
+                        child: Card(
+                          color: AppColors.bgMuted,
+                          margin: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                               Text(
                                 'Ubah Kata Sandi',
                                 style: TextStyle(
@@ -289,7 +343,12 @@ class EmployeeProfilePage extends StatelessWidget {
                                 builder: (context, isObscure, child) {
                                   return TextFormField(
                                     controller: newPasswordController,
+                                    focusNode: _newPasswordFocusNode,
                                     obscureText: isObscure,
+                                    onChanged: (value) {
+                                      // Trigger validation on change
+                                      _formKey.currentState!.validate();
+                                    },
                                     decoration: InputDecoration(
                                       labelText: 'Kata Sandi Baru',
                                       labelStyle: TextStyle(color: AppColors.textMuted),
@@ -311,6 +370,34 @@ class EmployeeProfilePage extends StatelessWidget {
                                       ),
                                     ),
                                     style: TextStyle(color: AppColors.textBase),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              ValueListenableBuilder<bool>(
+                                valueListenable: _showPasswordValidator,
+                                builder: (context, showValidator, child) {
+                                  if (!showValidator) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return FlutterPwValidator(
+                                    controller: newPasswordController,
+                                    minLength: 8,
+                                    uppercaseCharCount: 1,
+                                    lowercaseCharCount: 1,
+                                    numericCharCount: 1,
+                                    specialCharCount: 0, // No special character required based on old validation
+                                    width: 400,
+                                    height: 150,
+                                    onSuccess: () {
+                                      isPasswordValid.value = true;
+                                    },
+                                    onFail: () {
+                                      isPasswordValid.value = false;
+                                    },
+                                    defaultColor: AppColors.textMuted,
+                                    successColor: AppColors.success,
+                                    failureColor: AppColors.danger,
                                   );
                                 },
                               ),
@@ -342,17 +429,20 @@ class EmployeeProfilePage extends StatelessWidget {
                                       ),
                                     ),
                                     style: TextStyle(color: AppColors.textBase),
+                                    validator: (value) => _validateConfirmPassword(value),
                                   );
                                 },
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () {
-                                  context.read<EmployeeProfileBloc>().add(ChangeEmployeePassword(
-                                    oldPassword: oldPasswordController.text,
-                                    newPassword: newPasswordController.text,
-                                    confirmNewPassword: confirmNewPasswordController.text,
-                                  ));
+                                  if (_formKey.currentState!.validate() && isPasswordValid.value) {
+                                    context.read<EmployeeProfileBloc>().add(ChangeEmployeePassword(
+                                      oldPassword: oldPasswordController.text,
+                                      newPassword: newPasswordController.text,
+                                      confirmNewPassword: confirmNewPasswordController.text,
+                                    ));
+                                  }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.secondary,
@@ -365,6 +455,7 @@ class EmployeeProfilePage extends StatelessWidget {
                             ],
                           ),
                         ),
+                      ),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(

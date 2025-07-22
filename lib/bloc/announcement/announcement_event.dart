@@ -5,6 +5,8 @@ sealed class AnnouncementEvent {}
 
 class FetchAnnouncements extends AnnouncementEvent {}
 
+class MarkAnnouncementsAsRead extends AnnouncementEvent {}
+
 class ReceiveNewAnnouncement extends AnnouncementEvent {
   final Announcement announcement;
 
