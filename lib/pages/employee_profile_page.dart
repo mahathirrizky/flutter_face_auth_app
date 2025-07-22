@@ -408,6 +408,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                                   return TextFormField(
                                     controller: confirmNewPasswordController,
                                     obscureText: isObscure,
+                                    onChanged: (value) {
+                                      _formKey.currentState!.validate();
+                                    },
                                     decoration: InputDecoration(
                                       labelText: 'Konfirmasi Kata Sandi Baru',
                                       labelStyle: TextStyle(color: AppColors.textMuted),
