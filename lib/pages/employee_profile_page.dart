@@ -228,7 +228,8 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.secondary,
                                   foregroundColor: AppColors.textBase,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size.fromHeight(50), // Make the button taller
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 child: const Text('Update Profil'),
@@ -454,7 +455,8 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.secondary,
                                   foregroundColor: AppColors.textBase,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size.fromHeight(50), // Make the button taller
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 child: const Text('Ubah Kata Sandi'),
@@ -465,18 +467,19 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                       ),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<AuthBloc>().add(LogoutRequested());
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.danger,
-                          foregroundColor: AppColors.textBase,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Text('Logout'),
+                      ElevatedButton(onPressed: 
+                      () {
+                        context.read<AuthBloc>().add(LogoutRequested());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.danger,
+                        foregroundColor: AppColors.textBase,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        minimumSize: const Size.fromHeight(50), // Make the button taller
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
+                      child: const Text('Keluar')),
+                   
                     ],
                   ),
                 ),
