@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter_face_auth_app/repositories/leave_request_repository.dart';
 import 'package:meta/meta.dart';
@@ -14,6 +16,7 @@ class LeaveRequestBloc extends Bloc<LeaveRequestEvent, LeaveRequestState> {
         super(LeaveRequestInitial()) {
     on<FetchMyLeaveRequests>(_onFetchMyLeaveRequests);
     on<ApplyLeaveRequested>(_onApplyLeaveRequested);
+    on<CancelLeaveRequestRequested>(_onCancelLeaveRequestRequested);
   }
 
   Future<void> _onFetchMyLeaveRequests(
@@ -45,6 +48,7 @@ class LeaveRequestBloc extends Bloc<LeaveRequestEvent, LeaveRequestState> {
         startDate: event.startDate,
         endDate: event.endDate,
         reason: event.reason,
+        sickNoteFile: event.sickNoteFile,
       );
       emit(LeaveRequestAppliedSuccess());
       // Refresh the list after applying for leave
@@ -52,6 +56,24 @@ class LeaveRequestBloc extends Bloc<LeaveRequestEvent, LeaveRequestState> {
     } catch (e) {
       emit(LeaveRequestFailure(error: e.toString()));
       // If the previous state was loaded, restore it so the list doesn't disappear on error.
+      if (currentState is LeaveRequestsLoadedSuccess) {
+        emit(currentState);
+      }
+    }
+  }
+
+  Future<void> _onCancelLeaveRequestRequested(
+    CancelLeaveRequestRequested event,
+    Emitter<LeaveRequestState> emit,
+  ) async {
+    final currentState = state;
+    emit(LeaveRequestLoading());
+    try {
+      await _leaveRequestRepository.cancelLeaveRequest(event.requestId);
+      emit(LeaveRequestCancelledSuccess());
+      add(FetchMyLeaveRequests()); // Refresh the list after cancellation
+    } catch (e) {
+      emit(LeaveRequestFailure(error: e.toString()));
       if (currentState is LeaveRequestsLoadedSuccess) {
         emit(currentState);
       }

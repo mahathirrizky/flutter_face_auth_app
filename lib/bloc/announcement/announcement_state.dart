@@ -19,6 +19,9 @@ final class AnnouncementError extends AnnouncementState {
   AnnouncementError({required this.message});
 }
 
+
+
+
 class Announcement {
   final int id;
   final String title;

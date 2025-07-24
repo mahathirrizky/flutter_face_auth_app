@@ -89,3 +89,5 @@ final class AttendanceError extends AttendanceState {
   @override
   List<Object?> get props => [message];
 }
+
+

@@ -15,8 +15,13 @@ final class LeaveRequestsLoadedSuccess extends LeaveRequestState {
 
 final class LeaveRequestAppliedSuccess extends LeaveRequestState {}
 
+final class LeaveRequestCancelledSuccess extends LeaveRequestState {}
+
 final class LeaveRequestFailure extends LeaveRequestState {
   final String error;
 
   LeaveRequestFailure({required this.error});
 }
+
+
+

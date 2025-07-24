@@ -5,6 +5,7 @@ import 'package:toastification/toastification.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_pw_validator/flutter_pw_validator.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class EmployeeProfilePage extends StatefulWidget {
   const EmployeeProfilePage({super.key});
@@ -133,7 +134,10 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
               return Center(child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(),
+                  LoadingAnimationWidget.staggeredDotsWave(
+                    color: AppColors.secondary,
+                    size: 50,
+                  ),
                   const SizedBox(height: 16),
                   Text(state.message, style: TextStyle(color: AppColors.textBase)),
                 ],

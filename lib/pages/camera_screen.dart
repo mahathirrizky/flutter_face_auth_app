@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -73,7 +74,12 @@ class _CameraScreenState extends State<CameraScreen> {
               return const Center(child: Text('Camera not initialized.'));
             }
           } else {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.blue, // You might want to define a color in AppColors
+                size: 50,
+              ),
+            );
           }
         },
       ),

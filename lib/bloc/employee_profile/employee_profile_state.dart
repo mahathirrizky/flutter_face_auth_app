@@ -50,3 +50,5 @@ final class EmployeeProfileError extends EmployeeProfileState {
   final String message;
   EmployeeProfileError({required this.message});
 }
+
+

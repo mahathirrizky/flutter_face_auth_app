@@ -7,6 +7,7 @@ import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:flutter_face_auth_app/widgets/camera_preview_widget.dart';
 
 import 'package:toastification/toastification.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class ForceFaceUploadPage extends StatefulWidget {
   const ForceFaceUploadPage({super.key});
@@ -125,7 +126,12 @@ class _ForceFaceUploadPageState extends State<ForceFaceUploadPage> {
                 BlocBuilder<FaceUploadBloc, FaceUploadState>(
                   builder: (context, state) {
                     if (state is FaceUploadInProgress) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: LoadingAnimationWidget.staggeredDotsWave(
+                          color: AppColors.primary,
+                          size: 50,
+                        ),
+                      );
                     }
                     return ElevatedButton.icon(
                       onPressed: _onTakePicture,

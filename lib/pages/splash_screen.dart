@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,12 +31,15 @@ class _SplashScreenState extends State<SplashScreen> {
             context.go('/force-face-upload');
           }
         },
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
+              LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.blue, // You might want to define a color in AppColors
+                size: 50,
+              ),
+              const SizedBox(height: 16),
               Text('Halo', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             ],
           ),

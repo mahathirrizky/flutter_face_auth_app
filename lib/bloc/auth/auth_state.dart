@@ -30,3 +30,6 @@ class AuthLogoutFailure extends AuthState {
   final String message;
   AuthLogoutFailure({required this.message});
 }
+
+
+

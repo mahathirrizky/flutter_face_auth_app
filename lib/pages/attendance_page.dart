@@ -5,6 +5,7 @@ import 'package:flutter_face_auth_app/bloc/attendance/attendance_bloc.dart';
 import 'package:flutter_face_auth_app/widgets/camera_preview_widget.dart';
 import 'package:toastification/toastification.dart';
 import 'package:camera/camera.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
@@ -80,21 +81,42 @@ class _AttendancePageState extends State<AttendancePage> {
 
   void _showToast(String message, {ToastificationType type = ToastificationType.info}) {
     if (!mounted) return;
+    Color textColor = AppColors.textBase; // Default color
+    if (type == ToastificationType.error) {
+      textColor = Colors.red;
+    } else if (type == ToastificationType.success) {
+      textColor = Colors.green; // Set to green for success
+    }
+
     toastification.show(
       context: context,
-      title: Text(message),
+      title: Text(message, style: TextStyle(color: textColor)), // Apply text color
       type: type,
       autoCloseDuration: const Duration(seconds: 4),
       alignment: Alignment.topRight,
     );
   }
 
-  String _formatTime(String? isoString) {
-    if (isoString == null || isoString.isEmpty) return '--:--';
+  String _formatTime(String? timeString) {
+    if (timeString == null || timeString.isEmpty) return '--:--';
     try {
-      final dateTime = DateTime.parse(isoString).toLocal();
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      // If it's a full ISO string, parse it directly
+      if (timeString.contains('T')) {
+        final dateTime = DateTime.parse(timeString).toLocal();
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } else { // Assume it's HH:MM:SS format
+        final parts = timeString.split(':');
+        if (parts.length >= 2) {
+          final hour = int.parse(parts[0]);
+          final minute = int.parse(parts[1]);
+          // Create a dummy DateTime for formatting
+          final dummyDateTime = DateTime(2000, 1, 1, hour, minute);
+          return '${dummyDateTime.hour.toString().padLeft(2, '0')}:${dummyDateTime.minute.toString().padLeft(2, '0')}';
+        }
+      }
+      return 'Invalid Time';
     } catch (e) {
+      print('Error formatting time: $e');
       return 'Invalid Time';
     }
   }
@@ -163,7 +185,10 @@ class _AttendancePageState extends State<AttendancePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(),
+                    LoadingAnimationWidget.staggeredDotsWave(
+                      color: AppColors.secondary,
+                      size: 50,
+                    ),
                     const SizedBox(height: 16),
                     Text(state.message, style: TextStyle(color: AppColors.textBase)),
                   ],
@@ -207,8 +232,10 @@ class _AttendancePageState extends State<AttendancePage> {
           _buildValidationCard(context, state),
           const SizedBox(height: 16),
           _buildTodayAttendanceCard(context, state, isCheckInDone, isCheckOutDone),
-          const SizedBox(height: 16),
-          _buildAttendanceHistoryCard(context, state.attendanceHistory),
+           _buildAttendanceHistoryCard(
+            context,
+            state.attendanceHistory,
+          ),
         ],
       ),
     );
@@ -292,8 +319,36 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   Widget _buildTodayAttendanceCard(BuildContext context, AttendanceLoaded state, bool isCheckInDone, bool isCheckOutDone) {
-    final bool canCheckIn = state.isLocationValid && !isCheckInDone;
-    final bool canCheckOut = state.isLocationValid && isCheckInDone && !isCheckOutDone;
+    final bool isRegularCheckInOpen = isCheckInDone && !isCheckOutDone;
+    final bool isOvertimeCheckIn = state.todayAttendance['status'] == 'overtime_in';
+
+    // Get shift start time from employee profile
+    final String? shiftStartTimeStr = state.employeeProfile['shift']?['start_time'];
+    DateTime? earliestCheckInTime;
+
+    if (shiftStartTimeStr != null) {
+      try {
+        final now = DateTime.now();
+        final List<String> timeParts = shiftStartTimeStr.split(':');
+        final int hour = int.parse(timeParts[0]);
+        final int minute = int.parse(timeParts[1]);
+
+        // Create a DateTime object for today's shift start time
+        final DateTime shiftStartToday = DateTime(now.year, now.month, now.day, hour, minute);
+
+        // Calculate earliest allowed check-in time (1.5 hours before shift start)
+        earliestCheckInTime = shiftStartToday.subtract(const Duration(minutes: 90));
+      } catch (e) {
+        print('Error parsing shift start time: $e');
+      }
+    }
+
+    final bool isTooEarly = earliestCheckInTime != null && DateTime.now().isBefore(earliestCheckInTime);
+
+    final bool canCheckIn = state.isLocationValid && !isCheckInDone && !isOvertimeCheckIn && !isTooEarly; // Cannot check-in if already checked in or in overtime or too early
+    final bool canCheckOut = state.isLocationValid && isCheckInDone && !isCheckOutDone && !isOvertimeCheckIn; // Cannot check-out if not checked in or in overtime
+    final bool canOvertimeCheckIn = state.isLocationValid && !isRegularCheckInOpen && !isOvertimeCheckIn; // Can only overtime check-in if regular shift is closed and not already in overtime
+    final bool canOvertimeCheckOut = state.isLocationValid && isOvertimeCheckIn; // Can only overtime check-out if currently in overtime
 
     return Card(
       color: AppColors.bgMuted,
@@ -309,6 +364,11 @@ class _AttendancePageState extends State<AttendancePage> {
             const SizedBox(height: 8),
             _buildInfoRow('Waktu Pulang:', _formatTime(state.todayAttendance['check_out_time'])),
             const SizedBox(height: 8),
+            if (shiftStartTimeStr != null) ...[
+              _buildInfoRow('Shift Dimulai:', _formatTime(shiftStartTimeStr)),
+              _buildInfoRow('Check-in Paling Awal:', _formatTime(earliestCheckInTime?.toIso8601String())),
+              const SizedBox(height: 8),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -353,7 +413,7 @@ class _AttendancePageState extends State<AttendancePage> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: state.isLocationValid ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_in')) : null,
+                    onPressed: canOvertimeCheckIn ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_in')) : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.textBase,
@@ -367,7 +427,7 @@ class _AttendancePageState extends State<AttendancePage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: state.isLocationValid ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_out')) : null,
+                    onPressed: canOvertimeCheckOut ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_out')) : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.textBase,
@@ -449,7 +509,4 @@ class _AttendancePageState extends State<AttendancePage> {
       ],
     );
   }
-
-  
-  
 }

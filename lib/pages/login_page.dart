@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
 import 'package:toastification/toastification.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -117,7 +118,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     child: state is AuthLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? LoadingAnimationWidget.staggeredDotsWave(
+                            color: Colors.white,
+                            size: 20,
+                          )
                         : const Text(
                             'Login',
                             style: TextStyle(fontSize: 18),

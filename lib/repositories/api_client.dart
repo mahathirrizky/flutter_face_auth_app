@@ -28,4 +28,25 @@ class ApiClient extends http.BaseClient {
 
     return response;
   }
+
+  // New method to send MultipartRequest with authorization
+  Future<http.StreamedResponse> sendMultipart(http.MultipartRequest request) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await _inner.send(request);
+
+    if (response.statusCode == 401) {
+      // Hapus token
+      await prefs.remove('token');
+      throw Exception('Session expired');
+    }
+
+    return response;
+  }
 }
+

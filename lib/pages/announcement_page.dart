@@ -4,6 +4,7 @@ import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
 import 'package:flutter_face_auth_app/widgets/announcement_card.dart';
 import 'package:toastification/toastification.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 
 class AnnouncementPage extends StatefulWidget {
@@ -68,7 +69,12 @@ class _AnnouncementPageState extends State<AnnouncementPage> with WidgetsBinding
         },
         builder: (context, state) {
           if (state is AnnouncementLoading) {
-            return Center(child: CircularProgressIndicator(color: AppColors.secondary));
+            return Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: AppColors.secondary,
+                size: 50,
+              ),
+            );
           } else if (state is AnnouncementLoaded) {
             final announcements = state.announcements;
             

@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
 import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:toastification/toastification.dart';
+import 'package:file_picker/file_picker.dart'; // Import file_picker
+import 'dart:io'; // Import for File
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class EmployeeLeaveRequestPage extends StatefulWidget {
   const EmployeeLeaveRequestPage({super.key});
@@ -16,6 +19,7 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
   DateTime? _startDate;
   DateTime? _endDate;
   final TextEditingController _reasonController = TextEditingController();
+  File? _sickNoteFile; // Added for sick note file
 
   DateTime? _filterStartDate;
   DateTime? _filterEndDate;
@@ -55,6 +59,7 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
     DateTime? dialogStartDate = _startDate;
     DateTime? dialogEndDate = _endDate;
     final TextEditingController dialogReasonController = TextEditingController(text: _reasonController.text);
+    File? dialogSickNoteFile = _sickNoteFile; // Pass current file to dialog
 
     showDialog(
       context: parentContext,
@@ -209,6 +214,34 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
                       ),
                       style: TextStyle(color: AppColors.textBase),
                     ),
+                    if (dialogLeaveType == 'sakit') ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        dialogSickNoteFile != null
+                            ? 'File Terpilih: ${dialogSickNoteFile!.path.split('/').last}'
+                            : 'Belum ada surat sakit dipilih',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          FilePickerResult? result = await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+                          );
+                          if (result != null) {
+                            setState(() {
+                              dialogSickNoteFile = File(result.files.single.path!);
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.secondary,
+                          foregroundColor: AppColors.textBase,
+                        ),
+                        child: const Text('Pilih Surat Sakit'),
+                      ),
+                    ],
                   ],
                 ),
               );
@@ -227,12 +260,17 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
                   _showToast('Harap isi semua kolom.', type: ToastificationType.error);
                   return;
                 }
+                if (dialogLeaveType == 'sakit' && dialogSickNoteFile == null) {
+                  _showToast('Harap unggah surat sakit untuk cuti sakit.', type: ToastificationType.error);
+                  return;
+                }
                 parentContext.read<LeaveRequestBloc>().add(
                       ApplyLeaveRequested(
                         type: dialogLeaveType!,
                         startDate: dialogStartDate!.toIso8601String().split('T')[0],
                         endDate: dialogEndDate!.toIso8601String().split('T')[0],
                         reason: dialogReasonController.text,
+                        sickNoteFile: dialogSickNoteFile, // Pass the file
                       ),
                     );
                 Navigator.of(context).pop(); // Close the dialog
@@ -262,6 +300,8 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
         return Colors.red;
       case 'pending':
         return Colors.orange;
+      case 'cancelled':
+        return Colors.grey;
       default:
         return Colors.grey;
     }
@@ -467,7 +507,12 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
                         BlocBuilder<LeaveRequestBloc, LeaveRequestState>(
                           builder: (context, state) {
                             if (state is LeaveRequestLoading) {
-                              return const Center(child: CircularProgressIndicator());
+                              return Center(
+                                child: LoadingAnimationWidget.staggeredDotsWave(
+                                  color: AppColors.secondary,
+                                  size: 50,
+                                ),
+                              );
                             } else if (state is LeaveRequestsLoadedSuccess) {
                               if (state.leaveRequests.isNotEmpty) {
                                 return ListView.builder(
@@ -499,6 +544,47 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
                                                 request.status,
                                                 style: TextStyle(color: _getStatusColor(request.status)),
                                               ),
+                                              if (request.status == 'pending') ...[
+                                                const SizedBox(width: 8),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext dialogContext) {
+                                                        return AlertDialog(
+                                                          title: const Text('Batalkan Pengajuan Cuti'),
+                                                          content: const Text('Apakah Anda yakin ingin membatalkan pengajuan cuti ini?'),
+                                                          actions: <Widget>[
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(dialogContext).pop();
+                                                              },
+                                                              child: const Text('Tidak'),
+                                                            ),
+                                                            ElevatedButton(
+                                                              onPressed: () {
+                                                                Navigator.of(dialogContext).pop();
+                                                                context.read<LeaveRequestBloc>().add(
+                                                                      CancelLeaveRequestRequested(requestId: request.id),
+                                                                    );
+                                                              },
+                                                              child: const Text('Ya'),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: AppColors.danger,
+                                                    foregroundColor: AppColors.textBase,
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                    minimumSize: Size.zero, // Remove fixed size
+                                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap, // Shrink wrap for smaller button
+                                                  ),
+                                                  child: const Text('Batalkan'),
+                                                ),
+                                              ],
                                             ],
                                           ),
                                           if (index < state.leaveRequests.length - 1)
@@ -519,6 +605,9 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
                                 'Gagal memuat riwayat cuti: ${state.error}',
                                 style: TextStyle(color: Colors.red),
                               );
+                            } else if (state is LeaveRequestCancelledSuccess) {
+                              _showToast('Pengajuan cuti berhasil dibatalkan!', type: ToastificationType.success);
+                              context.read<LeaveRequestBloc>().add(FetchMyLeaveRequests()); // Refresh the list
                             }
                             return Text(
                               'Tidak ada riwayat pengajuan cuti.',

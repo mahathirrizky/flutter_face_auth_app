@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:flutter_face_auth_app/cubit/cubit.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class EmployeeHomePage extends StatelessWidget {
   const EmployeeHomePage({super.key});
@@ -23,7 +24,12 @@ class EmployeeHomePage extends StatelessWidget {
       body: BlocBuilder<EmployeeHomeCubit, EmployeeHomeState>(
         builder: (context, state) {
           if (state is EmployeeHomeLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: AppColors.secondary,
+                size: 50,
+              ),
+            );
           } else if (state is EmployeeHomeLoaded) {
             return SafeArea(
               child: SingleChildScrollView(

@@ -39,6 +39,7 @@ class EmployeeProfileBloc extends Bloc<EmployeeProfileEvent, EmployeeProfileStat
     if (state is! EmployeeProfileLoaded) return;
     final currentState = state as EmployeeProfileLoaded;
 
+;
     emit(currentState.copyWith(successMessage: null, errorMessage: null)); // Clear messages
 
     try {

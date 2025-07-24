@@ -21,3 +21,6 @@ class FaceUploadFailure extends FaceUploadState {
   @override
   List<Object> get props => [error];
 }
+
+
+

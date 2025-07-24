@@ -299,6 +299,7 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
         isCameraActive: false,
         currentActionType: null,
         errorMessage: null, // Clear any previous error messages
+        isFaceRecognized: true, // Set to true on success
       ));
 
     } catch (e) {
