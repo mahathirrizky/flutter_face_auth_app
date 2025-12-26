@@ -132,7 +132,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _initAndConnectWebSocket(String token) {
-    const String wsBaseUrl = 'api.4commander.my.id';
+    // Disconnect any existing WebSocket service before creating a new one
+    _webSocketService?.disconnect();
+
+    const String wsBaseUrl = '457c68305f78.ngrok-free.app';
     const String wsNotificationPath = '/ws/employee-notifications';
     final String fullWebSocketUrl = 'wss://$wsBaseUrl$wsNotificationPath?token=$token';
     print('DEBUG: Full WebSocket URL: $fullWebSocketUrl');

@@ -5,7 +5,7 @@ import 'package:flutter_face_auth_app/repositories/api_client.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart'; // Import Announcement model
 
 class AnnouncementRepository {
-  final String _baseUrl = 'https://api.4commander.my.id/api';
+  final String _baseUrl = 'https://457c68305f78.ngrok-free.app/api';
 
   AnnouncementRepository();
 

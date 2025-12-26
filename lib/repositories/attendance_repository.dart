@@ -6,7 +6,7 @@ import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 
 class AttendanceRepository {
   final ApiClient _apiClient;
-  final String _baseUrl = "https://api.4commander.my.id/api";
+  final String _baseUrl = "https://457c68305f78.ngrok-free.app/api";
 
   AttendanceRepository({ApiClient? apiClient})
       : _apiClient = apiClient ?? ApiClient(http.Client());

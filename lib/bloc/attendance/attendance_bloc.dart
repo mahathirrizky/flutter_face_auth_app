@@ -185,8 +185,8 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
 
       _positionStreamSubscription = _geolocatorPlatform.getPositionStream(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 100, // Update every 100 meters
+          accuracy: LocationAccuracy.best,
+          distanceFilter: 5, // Update every 100 meters
         ),
       ).listen(
         (Position position) {

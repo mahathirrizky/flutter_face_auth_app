@@ -5,7 +5,7 @@ import 'package:http_parser/http_parser.dart';
 import 'api_client.dart';
 import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 class ProfileRepository {
-  final String _baseUrl = 'https://api.4commander.my.id/api';
+  final String _baseUrl = 'https://457c68305f78.ngrok-free.app/api';
 
   ProfileRepository();
 

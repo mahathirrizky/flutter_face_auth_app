@@ -77,7 +77,7 @@ class _EmployeeLeaveRequestPageState extends State<EmployeeLeaveRequestPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: dialogLeaveType,
+                      initialValue: dialogLeaveType,
                       decoration: InputDecoration(
                         labelText: 'Jenis Cuti',
                         labelStyle: TextStyle(color: AppColors.textMuted),

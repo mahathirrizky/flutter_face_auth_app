@@ -14,33 +14,49 @@ class AppColors {
 
 ThemeData appTheme() {
   return ThemeData(
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.bgBase, // Default background color
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.bgMuted, // AppBar background
-      foregroundColor: AppColors.textBase, // AppBar text/icon color
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+
+      surface: AppColors.bgMuted,
+      error: AppColors.danger,
+      brightness: Brightness.dark, // Default to dark mode look
     ),
-    textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: AppColors.textBase),
-      bodyMedium: TextStyle(color: AppColors.textBase),
-      // Add more text styles as needed
+    scaffoldBackgroundColor: AppColors.bgBase,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.bgBase,
+      elevation: 0,
+      centerTitle: true,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.secondary, // Button background
-        foregroundColor: AppColors.textBase, // Button text color
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
       ),
     ),
-    inputDecorationTheme: const InputDecorationTheme(
-      labelStyle: TextStyle(color: AppColors.textMuted),
-      hintStyle: TextStyle(color: AppColors.textMuted),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.bgMuted,
+      labelStyle: const TextStyle(color: AppColors.textMuted),
+      hintStyle: const TextStyle(color: AppColors.textMuted),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.textMuted),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.secondary),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
-    // Add more theme properties as needed
   );
 }
