@@ -54,32 +54,34 @@ class _EmployeeTabsPageState extends State<EmployeeTabsPage> {
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: _onItemTapped,
                 labelType: NavigationRailLabelType.all,
+                indicatorColor: AppColors.secondary.withOpacity(0.2),
                 destinations: const <NavigationRailDestination>[
                   NavigationRailDestination(
-                    icon: Icon(Icons.home),
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home, color: AppColors.secondary),
                     label: Text('Home'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.campaign),
+                    icon: Icon(Icons.campaign_outlined),
+                    selectedIcon: Icon(Icons.campaign, color: AppColors.secondary),
                     label: Text('Announce'),
                   ),
                   NavigationRailDestination(
                     icon: Icon(Icons.check_circle_outline),
+                    selectedIcon: Icon(Icons.check_circle, color: AppColors.secondary),
                     label: Text('Attendance'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.calendar_today),
+                    icon: Icon(Icons.calendar_today_outlined),
+                    selectedIcon: Icon(Icons.calendar_today, color: AppColors.secondary),
                     label: Text('Leave'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.person),
+                    icon: Icon(Icons.person_outline),
+                    selectedIcon: Icon(Icons.person, color: AppColors.secondary),
                     label: Text('Profile'),
                   ),
                 ],
-                selectedIconTheme: const IconThemeData(color: AppColors.secondary),
-                unselectedIconTheme: const IconThemeData(color: AppColors.textMuted),
-                selectedLabelTextStyle: const TextStyle(color: AppColors.secondary),
-                unselectedLabelTextStyle: const TextStyle(color: AppColors.textMuted),
                 backgroundColor: AppColors.bgMuted,
                 groupAlignment: 0.0,
               ),
@@ -99,35 +101,38 @@ class _EmployeeTabsPageState extends State<EmployeeTabsPage> {
               index: _selectedIndex,
               children: _pages,
             ),
-            bottomNavigationBar: BottomNavigationBar(
-              items: const <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: _onItemTapped,
+              backgroundColor: AppColors.bgMuted,
+              indicatorColor: AppColors.secondary.withOpacity(0.2),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home, color: AppColors.secondary),
                   label: 'Home',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.campaign),
+                NavigationDestination(
+                  icon: Icon(Icons.campaign_outlined),
+                  selectedIcon: Icon(Icons.campaign, color: AppColors.secondary),
                   label: 'Announce',
                 ),
-                BottomNavigationBarItem(
+                NavigationDestination(
                   icon: Icon(Icons.check_circle_outline),
+                  selectedIcon: Icon(Icons.check_circle, color: AppColors.secondary),
                   label: 'Attendance',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.calendar_today),
+                NavigationDestination(
+                  icon: Icon(Icons.calendar_today_outlined),
+                  selectedIcon: Icon(Icons.calendar_today, color: AppColors.secondary),
                   label: 'Leave',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person, color: AppColors.secondary),
                   label: 'Profile',
                 ),
               ],
-              currentIndex: _selectedIndex,
-              selectedItemColor: AppColors.secondary,
-              unselectedItemColor: AppColors.textMuted,
-              backgroundColor: AppColors.bgMuted,
-              onTap: _onItemTapped,
-              type: BottomNavigationBarType.fixed,
             ),
           );
         }
