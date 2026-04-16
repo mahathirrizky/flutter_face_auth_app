@@ -1,3 +1,4 @@
+import 'package:flutter_face_auth_app/locator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,7 @@ class AuthRepository {
   AuthRepository();
 
   Future<String> loginEmployee(String email, String password) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.post(
         Uri.parse('${ApiClient.baseUrl}/login/employee'),
@@ -36,7 +37,7 @@ class AuthRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 

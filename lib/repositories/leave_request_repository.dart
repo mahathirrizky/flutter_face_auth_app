@@ -1,3 +1,4 @@
+import 'package:flutter_face_auth_app/locator.dart';
 import 'dart:convert';
 import 'dart:io'; // Added for File
 import 'dart:typed_data'; // Added for Uint8List
@@ -63,7 +64,7 @@ class LeaveRequestRepository {
     required String reason,
     File? sickNoteFile, // Added for sick note file
   }) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final uri = Uri.parse('${ApiClient.baseUrl}/leave-requests');
       final request = http.MultipartRequest('POST', uri);
@@ -127,12 +128,12 @@ class LeaveRequestRepository {
         throw Exception(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 
   Future<List<LeaveRequest>> getMyLeaveRequests({String? startDate, String? endDate}) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       String url = '${ApiClient.baseUrl}/my-leave-requests';
       if (startDate != null && endDate != null) {
@@ -160,12 +161,12 @@ class LeaveRequestRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 
   Future<void> cancelLeaveRequest(int requestId) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.delete(
         Uri.parse('${ApiClient.baseUrl}/leave-requests/$requestId'),
@@ -180,7 +181,7 @@ class LeaveRequestRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter_face_auth_app/locator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
@@ -7,7 +8,7 @@ class DashboardRepository {
   DashboardRepository();
 
   Future<Map<String, dynamic>> getEmployeeDashboardSummary() async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.get(
         Uri.parse('${ApiClient.baseUrl}/employee/dashboard-summary'),
@@ -29,7 +30,7 @@ class DashboardRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 }

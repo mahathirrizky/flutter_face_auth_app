@@ -1,3 +1,4 @@
+import 'package:flutter_face_auth_app/locator.dart';
 import 'dart:convert';
 import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 import 'package:http/http.dart' as http;
@@ -5,15 +6,15 @@ import 'package:flutter_face_auth_app/repositories/api_client.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart'; // Import Announcement model
 
 class AnnouncementRepository {
-  final String _baseUrl = 'https://457c68305f78.ngrok-free.app/api';
+  
 
   AnnouncementRepository();
 
   Future<List<Announcement>> getAnnouncements() async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.get(
-        Uri.parse('$_baseUrl/broadcasts'),
+        Uri.parse('${ApiClient.baseUrl}/broadcasts'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -32,12 +33,12 @@ class AnnouncementRepository {
         throw Exception(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 
   Future<void> markAsRead(int messageId) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.post(
         Uri.parse('${ApiClient.baseUrl}/broadcasts/$messageId/read'),
@@ -52,7 +53,7 @@ class AnnouncementRepository {
         throw Exception(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 }

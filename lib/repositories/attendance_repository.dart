@@ -3,17 +3,17 @@ import 'dart:convert';
 import 'package:flutter_face_auth_app/repositories/api_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
+import 'package:flutter_face_auth_app/locator.dart';
 
 class AttendanceRepository {
   final ApiClient _apiClient;
-  final String _baseUrl = "https://457c68305f78.ngrok-free.app/api";
 
   AttendanceRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient(http.Client());
+      : _apiClient = apiClient ?? getIt<ApiClient>();
 
   Future<List<Map<String, dynamic>>> getAttendanceHistory(int employeeId) async {
     final response = await _apiClient.get(
-      Uri.parse('$_baseUrl/employees/$employeeId/attendances'),
+      Uri.parse('${ApiClient.baseUrl}/employees/$employeeId/attendances'),
     );
     final responseBody = jsonDecode(response.body);
     if (response.statusCode == 200) {
@@ -28,6 +28,7 @@ class AttendanceRepository {
     final history = await getAttendanceHistory(employeeId);
     final today = DateTime.now();
     for (var record in history) {
+      if (record['check_in_time'] == null || record['check_in_time'] == "") continue;
       final checkInTime = DateTime.parse(record['check_in_time']).toLocal();
       if (checkInTime.year == today.year &&
           checkInTime.month == today.month &&
@@ -37,8 +38,10 @@ class AttendanceRepository {
     }
     return {
       'check_in_time': '',
+      'noon_check_time': '',
       'check_out_time': '',
       'status': 'Belum Absen',
+      'noon_status': 'Belum Absen',
     };
   }
 
@@ -49,7 +52,7 @@ class AttendanceRepository {
     required String imageData,
   }) async {
     final response = await _apiClient.post(
-      Uri.parse('$_baseUrl/attendance'),
+      Uri.parse('${ApiClient.baseUrl}/attendance'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'employee_id': employeeId,
@@ -73,7 +76,7 @@ class AttendanceRepository {
     required String imageData,
   }) async {
     final response = await _apiClient.post(
-      Uri.parse('$_baseUrl/overtime/check-in'),
+      Uri.parse('${ApiClient.baseUrl}/overtime/check-in'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'employee_id': employeeId,

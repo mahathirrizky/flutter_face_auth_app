@@ -8,8 +8,13 @@ import 'package:flutter_face_auth_app/theme/app_theme.dart';
 import 'package:flutter_face_auth_app/bloc/bloc.dart';
 import 'package:flutter_face_auth_app/cubit/cubit.dart';
 
-void main() {
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
   
   // Initialize dependency injection
   setupLocator();

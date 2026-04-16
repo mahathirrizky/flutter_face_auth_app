@@ -1,8 +1,9 @@
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiClient extends http.BaseClient {
-  static const String baseUrl = 'https://457c68305f78.ngrok-free.app/api';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080/api';
   final http.Client _inner;
 
   ApiClient(this._inner);

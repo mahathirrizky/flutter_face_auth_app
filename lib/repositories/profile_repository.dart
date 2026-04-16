@@ -1,3 +1,4 @@
+import 'package:flutter_face_auth_app/locator.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
@@ -5,15 +6,15 @@ import 'package:http_parser/http_parser.dart';
 import 'api_client.dart';
 import 'package:flutter_face_auth_app/helper/custom_exceptions.dart';
 class ProfileRepository {
-  final String _baseUrl = 'https://457c68305f78.ngrok-free.app/api';
+  
 
   ProfileRepository();
 
   Future<Map<String, dynamic>> getEmployeeProfile() async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.get(
-        Uri.parse('$_baseUrl/employee/profile'),
+        Uri.parse('${ApiClient.baseUrl}/employee/profile'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -32,12 +33,12 @@ class ProfileRepository {
         throw Exception(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 
   Future<void> uploadFaceImage(Uint8List imageBytes, String filename) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final request = http.MultipartRequest(
         'POST',
@@ -62,7 +63,7 @@ class ProfileRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 
@@ -71,10 +72,10 @@ class ProfileRepository {
     required String email,
     required String position,
   }) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.put(
-        Uri.parse('$_baseUrl/employee/profile'),
+        Uri.parse('${ApiClient.baseUrl}/employee/profile'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -91,7 +92,7 @@ class ProfileRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 
@@ -100,10 +101,10 @@ class ProfileRepository {
     required String newPassword,
     required String confirmNewPassword,
   }) async {
-    final client = ApiClient(http.Client());
+    final client = getIt<ApiClient>();
     try {
       final response = await client.put(
-        Uri.parse('$_baseUrl/employee/change-password'),
+        Uri.parse('${ApiClient.baseUrl}/employee/change-password'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -120,7 +121,7 @@ class ProfileRepository {
         throw CustomException(errorMessage);
       }
     } finally {
-      client.close();
+      
     }
   }
 }

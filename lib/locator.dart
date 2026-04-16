@@ -1,4 +1,6 @@
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_face_auth_app/repositories/api_client.dart';
 
 import 'package:flutter_face_auth_app/repositories/announcement_repository.dart';
 import 'package:flutter_face_auth_app/repositories/attendance_repository.dart';
@@ -21,6 +23,8 @@ void setupLocator() {
   // -------------------------------------------------------------
   // Repositories (Lazy Singletons - Diinisialisasi hanya jika dipanggil)
   // -------------------------------------------------------------
+  getIt.registerLazySingleton<ApiClient>(() => ApiClient(http.Client()));
+
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepository());
   getIt.registerLazySingleton<ProfileRepository>(() => ProfileRepository());
   getIt.registerLazySingleton<AnnouncementRepository>(() => AnnouncementRepository());

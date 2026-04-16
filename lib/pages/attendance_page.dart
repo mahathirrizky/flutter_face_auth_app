@@ -6,7 +6,10 @@ import 'package:flutter_face_auth_app/widgets/camera_preview_widget.dart';
 import 'package:toastification/toastification.dart';
 import 'package:camera/camera.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'dart:io';
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
 
@@ -17,6 +20,16 @@ class AttendancePage extends StatefulWidget {
 class _AttendancePageState extends State<AttendancePage> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
+
+  final FaceDetector _faceDetector = FaceDetector(
+    options: FaceDetectorOptions(
+      enableClassification: true,
+      minFaceSize: 0.15,
+    ),
+  );
+  bool _isDetecting = false;
+  bool _blinkReady = false;
+  int _faceNotFoundCounter = 0;
 
   @override
   void initState() {
@@ -49,6 +62,7 @@ class _AttendancePageState extends State<AttendancePage> {
       frontCamera,
       ResolutionPreset.medium,
       enableAudio: false,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
     );
 
     try {
@@ -56,10 +70,103 @@ class _AttendancePageState extends State<AttendancePage> {
       if (mounted) {
         setState(() {}); // Rebuild to show the camera preview
         context.read<AttendanceBloc>().add(ActivateCamera(actionType: actionType));
+
+        _cameraController!.startImageStream((CameraImage image) {
+          if (_isDetecting) return;
+          _isDetecting = true;
+          _processCameraImage(image, actionType);
+        });
       }
     } catch (e) {
       _showToast('Gagal menginisialisasi kamera: $e', type: ToastificationType.error);
       _disposeCameraController(); // Clean up on error
+    }
+  }
+
+  final _orientations = {
+    DeviceOrientation.portraitUp: 0,
+    DeviceOrientation.landscapeLeft: 90,
+    DeviceOrientation.portraitDown: 180,
+    DeviceOrientation.landscapeRight: 270,
+  };
+
+  InputImage? _inputImageFromCameraImage(CameraImage image) {
+    if (_cameraController == null) return null;
+    final camera = _cameras!.firstWhere((c) => c.lensDirection == _cameraController!.description.lensDirection);
+    final sensorOrientation = camera.sensorOrientation;
+    InputImageRotation? rotation;
+    if (Platform.isIOS) {
+      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    } else if (Platform.isAndroid) {
+      var rotationCompensation = _orientations[_cameraController!.value.deviceOrientation];
+      if (rotationCompensation == null) return null;
+      if (camera.lensDirection == CameraLensDirection.front) {
+        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
+      } else {
+        rotationCompensation = (sensorOrientation - rotationCompensation + 360) % 360;
+      }
+      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+    }
+    if (rotation == null) return null;
+
+    final format = InputImageFormatValue.fromRawValue(image.format.raw);
+    if (format == null || (Platform.isAndroid && format != InputImageFormat.nv21)) return null;
+
+    if (image.planes.isEmpty) return null;
+
+    return InputImage.fromBytes(
+      bytes: image.planes[0].bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation,
+        format: format,
+        bytesPerRow: image.planes[0].bytesPerRow,
+      ),
+    );
+  }
+
+  Future<void> _processCameraImage(CameraImage image, String actionType) async {
+    try {
+      final inputImage = _inputImageFromCameraImage(image);
+      if (inputImage == null) return;
+      
+      final faces = await _faceDetector.processImage(inputImage);
+      if (faces.isNotEmpty) {
+        _faceNotFoundCounter = 0;
+        final face = faces.first;
+        if (face.leftEyeOpenProbability != null && face.rightEyeOpenProbability != null) {
+          final double leftProb = face.leftEyeOpenProbability!;
+          final double rightProb = face.rightEyeOpenProbability!;
+          
+          if (leftProb > 0.8 && rightProb > 0.8) {
+            _blinkReady = true;
+          } else if (leftProb < 0.2 && rightProb < 0.2 && _blinkReady) {
+            _blinkReady = false;
+            await _cameraController!.stopImageStream();
+            final XFile imageFile = await _cameraController!.takePicture();
+            if (mounted) {
+               _showToast('Kedipan terdeteksi!', type: ToastificationType.success);
+               context.read<AttendanceBloc>().add(TakePhotoAndVerifyFace(
+                   imageFile: imageFile, 
+                   actionType: actionType,
+               ));
+            }
+          }
+        }
+      } else {
+        _faceNotFoundCounter++;
+        if (_faceNotFoundCounter > 30) {
+           _blinkReady = false; 
+        }
+      }
+    } catch(e) {
+      // ignore
+    } finally {
+      if (mounted) {
+         setState(() { _isDetecting = false; });
+      } else {
+         _isDetecting = false;
+      }
     }
   }
 
@@ -76,6 +183,7 @@ class _AttendancePageState extends State<AttendancePage> {
   @override
   void dispose() {
     _disposeCameraController();
+    _faceDetector.close();
     super.dispose();
   }
 
@@ -288,25 +396,14 @@ class _AttendancePageState extends State<AttendancePage> {
           ),
           
           if (state.isCameraActive)
-            Positioned(
+              Positioned(
               bottom: 10,
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (_cameraController == null || !_cameraController!.value.isInitialized) {
-                    _showToast('Kamera belum siap.', type: ToastificationType.warning);
-                    return;
-                  }
-                  try {
-                    final XFile imageFile = await _cameraController!.takePicture();
-                    if (!mounted) return;
-                    context.read<AttendanceBloc>().add(TakePhotoAndVerifyFace(imageFile: imageFile, actionType: state.currentActionType!));
-                  } catch (e) {
-                    if (!mounted) return;
-                    _showToast('Gagal mengambil gambar: $e', type: ToastificationType.error);
-                  }
+                onPressed: () {
+                   _showToast('Mohon berkedip untuk absen.', type: ToastificationType.info);
                 },
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('Ambil & Verifikasi'),
+                icon: const Icon(Icons.face),
+                label: const Text('Tunggu Kedipan Mata...'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.secondary,
                   foregroundColor: AppColors.textBase,
@@ -319,130 +416,139 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   Widget _buildTodayAttendanceCard(BuildContext context, AttendanceLoaded state, bool isCheckInDone, bool isCheckOutDone) {
-    final bool isRegularCheckInOpen = isCheckInDone && !isCheckOutDone;
-    final bool isOvertimeCheckIn = state.todayAttendance['status'] == 'overtime_in';
+    final bool isNoonCheckDone = state.todayAttendance['noon_check_time'] != null && state.todayAttendance['noon_check_time'].toString().isNotEmpty;
+    final bool isOvertimeCheckIn = state.todayAttendance['status']?.toString().contains('overtime') ?? false;
 
-    // Get shift start time from employee profile
-    final String? shiftStartTimeStr = state.employeeProfile['shift']?['start_time'];
-    DateTime? earliestCheckInTime;
+    // Get shift windows
+    final String? shiftStart = state.employeeProfile['shift']?['start_time'];
+    final String? noonStart = state.employeeProfile['shift']?['noon_start_time'];
+    final String? noonEnd = state.employeeProfile['shift']?['noon_end_time'];
+    final bool hasNoonCheck = noonStart != null && noonStart.isNotEmpty;
 
-    if (shiftStartTimeStr != null) {
-      try {
-        final now = DateTime.now();
-        final List<String> timeParts = shiftStartTimeStr.split(':');
-        final int hour = int.parse(timeParts[0]);
-        final int minute = int.parse(timeParts[1]);
+    // Determine current window (Client-side estimation)
+    final now = DateTime.now();
+    DateTime? windowNoonStart;
+    DateTime? windowNoonEnd;
 
-        // Create a DateTime object for today's shift start time
-        final DateTime shiftStartToday = DateTime(now.year, now.month, now.day, hour, minute);
+    if (hasNoonCheck) {
+      final partsS = noonStart.split(':');
+      final partsE = noonEnd!.split(':');
+      windowNoonStart = DateTime(now.year, now.month, now.day, int.parse(partsS[0]), int.parse(partsS[1]));
+      windowNoonEnd = DateTime(now.year, now.month, now.day, int.parse(partsE[0]), int.parse(partsE[1]));
+    }
 
-        // Calculate earliest allowed check-in time (1.5 hours before shift start)
-        earliestCheckInTime = shiftStartToday.subtract(const Duration(minutes: 90));
-      } catch (e) {
-        print('Error parsing shift start time: $e');
+    String primaryButtonLabel = 'Check-in';
+    String actionType = 'check_in';
+    bool canTakeAction = state.isLocationValid;
+
+    if (hasNoonCheck) {
+      if (now.isBefore(windowNoonStart!)) {
+        primaryButtonLabel = 'Absen Pagi';
+        canTakeAction &= !isCheckInDone;
+      } else if (now.isAfter(windowNoonStart) && now.isBefore(windowNoonEnd!)) {
+        primaryButtonLabel = 'Absen Siang';
+        canTakeAction &= !isNoonCheckDone;
+      } else {
+        primaryButtonLabel = 'Absen Pulang';
+        canTakeAction &= (isCheckInDone || isNoonCheckDone) && !isCheckOutDone;
+      }
+    } else {
+      // Fallback 2-stage
+      if (!isCheckInDone) {
+        primaryButtonLabel = 'Check-in';
+      } else {
+        primaryButtonLabel = 'Check-out';
+        canTakeAction &= !isCheckOutDone;
       }
     }
 
-    final bool isTooEarly = earliestCheckInTime != null && DateTime.now().isBefore(earliestCheckInTime);
-
-    final bool canCheckIn = state.isLocationValid && !isCheckInDone && !isOvertimeCheckIn && !isTooEarly; // Cannot check-in if already checked in or in overtime or too early
-    final bool canCheckOut = state.isLocationValid && isCheckInDone && !isCheckOutDone && !isOvertimeCheckIn; // Cannot check-out if not checked in or in overtime
-    final bool canOvertimeCheckIn = state.isLocationValid && !isRegularCheckInOpen && !isOvertimeCheckIn; // Can only overtime check-in if regular shift is closed and not already in overtime
-    final bool canOvertimeCheckOut = state.isLocationValid && isOvertimeCheckIn; // Can only overtime check-out if currently in overtime
-
     return Card(
       color: AppColors.bgMuted,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Absensi Hari Ini', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textBase)),
-            const SizedBox(height: 16),
-            _buildInfoRow('Waktu Masuk:', _formatTime(state.todayAttendance['check_in_time'])),
-            const SizedBox(height: 8),
-            _buildInfoRow('Waktu Pulang:', _formatTime(state.todayAttendance['check_out_time'])),
-            const SizedBox(height: 8),
-            if (shiftStartTimeStr != null) ...[
-              _buildInfoRow('Shift Dimulai:', _formatTime(shiftStartTimeStr)),
-              _buildInfoRow('Check-in Paling Awal:', _formatTime(earliestCheckInTime?.toIso8601String())),
-              const SizedBox(height: 8),
-            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Status:', style: TextStyle(color: AppColors.textBase)),
-                Text(state.todayAttendance['status'] ?? '-', style: TextStyle(color: _getStatusColor(state.todayAttendance['status']))),
+                Text('Absensi Hari Ini', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textBase)),
+                if (isOvertimeCheckIn)
+                   Container(
+                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                     decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(4)),
+                     child: Text('LEMBUR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.bgBase)),
+                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            
+            // Triple-Check Status Icons
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canCheckIn ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'check_in')) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: AppColors.textBase,
-                      disabledBackgroundColor: AppColors.secondary.withAlpha(100), // Reduced opacity for disabled
-                      disabledForegroundColor: AppColors.textBase.withAlpha(100), // Reduced opacity for disabled
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text('Check-in'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canCheckOut ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'check_out')) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: AppColors.textBase,
-                      disabledBackgroundColor: AppColors.secondary.withAlpha(100), // Reduced opacity for disabled
-                      disabledForegroundColor: AppColors.textBase.withAlpha(100), // Reduced opacity for disabled
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text('Check-out'),
-                  ),
-                ),
+                _buildStageIcon('Pagi', isCheckInDone, state.todayAttendance['check_in_time']),
+                if (hasNoonCheck) _buildStageIcon('Siang', isNoonCheckDone, state.todayAttendance['noon_check_time']),
+                _buildStageIcon('Pulang', isCheckOutDone, state.todayAttendance['check_out_time']),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canOvertimeCheckIn ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_in')) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: AppColors.textBase,
-                      disabledBackgroundColor: AppColors.accent.withAlpha(100), // Reduced opacity for disabled
-                      disabledForegroundColor: AppColors.textBase.withAlpha(100), // Reduced opacity for disabled
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text('Lembur Masuk'),
-                  ),
+            
+            const SizedBox(height: 24),
+            
+            // Main Contextual Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: canTakeAction ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: actionType)) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: AppColors.textBase,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canOvertimeCheckOut ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_out')) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: AppColors.textBase,
-                      disabledBackgroundColor: AppColors.accent.withAlpha(100), // Reduced opacity for disabled
-                      disabledForegroundColor: AppColors.textBase.withAlpha(100), // Reduced opacity for disabled
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text('Lembur Pulang'),
-                  ),
-                ),
-              ],
+                child: Text(primaryButtonLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
             ),
+            
+            const SizedBox(height: 12),
+            
+            // Overtime Actions (Subtle)
+            if (!isOvertimeCheckIn)
+              Center(
+                child: TextButton(
+                  onPressed: state.isLocationValid ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_in')) : null,
+                  child: Text('Mulai Lembur?', style: TextStyle(color: AppColors.accent)),
+                ),
+              )
+            else
+              Center(
+                child: TextButton(
+                  onPressed: state.isLocationValid ? () => context.read<AttendanceBloc>().add(ActivateCamera(actionType: 'overtime_out')) : null,
+                  child: const Text('Selesaikan Lembur', style: TextStyle(color: Colors.redAccent)),
+                ),
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStageIcon(String label, bool isDone, dynamic time) {
+    return Column(
+      children: [
+        Icon(
+          isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+          color: isDone ? Colors.greenAccent : AppColors.textMuted,
+          size: 32,
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: AppColors.textBase, fontWeight: FontWeight.bold)),
+        Text(
+          isDone ? _formatTime(time.toString()) : '--:--',
+          style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+        ),
+      ],
     );
   }
 
